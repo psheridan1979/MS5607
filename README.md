@@ -1,4 +1,9 @@
 # MS5607
+Fork of the MS5607 project by linear-zz 
+https://github.com/llinear-zz/MS5607
+Adding 2nd order temperature correction based on parallax's documentation and an example logger file.
+The following is linear-zz's original README text
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Python code for the Altimeter Module MS5607
 Based on the documents found at https://www.parallax.com/product/29124
 
