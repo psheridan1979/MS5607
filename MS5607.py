@@ -1,6 +1,7 @@
 import time
 import smbus
 import math
+from numpy import std as standardDeviation
 
 #bus = smbus.SMBus(1)
 
@@ -29,7 +30,8 @@ class MS5607:
         self.bus = smbus.SMBus(bus_num)
         self.resetSensor()
         self.coefficients = self.readCoefficients()
-
+        self.sea_level_pressure = 101325 #in HPa * 100, sea level is 1013.25 HPa
+        self.ground_level_pressure = self.sea_level_pressure 
     # Some utility methods
     def read16U(self, register1, register2):
         bytes = self.bus.read_i2c_block_data(self.address, register1, 2)
@@ -45,6 +47,35 @@ class MS5607:
         return (1 - math.pow(currentMilliBar / baseMilliBar, .190284)) * 145366.45
     def getMetricAltitude(self, currentMilliBar, baseMilliBar):
         return 0.3048 * self.getImperialAltitude(currentMilliBar, baseMilliBar)
+    def getExpectedPressureAtAltitude(self, altitude):
+        return self.sea_level_pressure * exp(-0.00012 * altitude)
+    def setGroundLevel(self, known_altitude, samples=500):
+        temperature = []
+        pressure = []
+        temperature_sum = 0
+        pressure_sum = 0
+        for i in range(samples):
+            t = sensor.getDigitalTemperature()
+            temperature.append(t)
+            temperature_sum += t
+            p = sensor.getDigitalPressure()
+            pressure.append(p)
+            pressure_sum += p
+        meant_temp = temperature_sum /= samples
+        mean_pressure presure_sum /= samples 
+        temp_sigma = standardDeviation(temperature)
+        press_sigma = standardDeviation(pressure)
+        converted = sensor.convertPressureTemperature(mean_pressure, meant_temp)
+        asl_altitude = self.getMetricAltitude(converted, self.sea_level_pressure)
+        print("Known ASL altitude: " + known_altitude + " m")
+        print("Calculated ASL altitude: " + asl_altitude + " m")
+        print("Sea level pressure: " + self.sea_level_pressure + " hPa")
+        expected_pressure = self.getExpectedPressureAtAltitude(known_altitude)
+        print("Expected ground level pressure at " + known_altitude " meters: " + expected_pressure + " hPa")
+        print("Measured ground level pressure: " + converted + " hPa")
+        
+
+
 
     # Commands		
     def resetSensor(self):
