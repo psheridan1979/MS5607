@@ -1,7 +1,9 @@
+from __future__ import print_function
 import time
 import smbus
 import math
 from numpy import std as standardDeviation
+
 
 #bus = smbus.SMBus(1)
 
@@ -61,18 +63,18 @@ class MS5607:
             p = sensor.getDigitalPressure()
             pressure.append(p)
             pressure_sum += p
-        meant_temp = temperature_sum /= samples
-        mean_pressure presure_sum /= samples 
+        meant_temp = temperature_sum / samples
+        mean_pressure = presure_sum / samples 
         temp_sigma = standardDeviation(temperature)
         press_sigma = standardDeviation(pressure)
         converted = sensor.convertPressureTemperature(mean_pressure, meant_temp)
         asl_altitude = self.getMetricAltitude(converted, self.sea_level_pressure)
-        print("Known ASL altitude: " + known_altitude + " m")
-        print("Calculated ASL altitude: " + asl_altitude + " m")
-        print("Sea level pressure: " + self.sea_level_pressure + " hPa")
+        print('Known ASL altitude: ', ('%8.2f' % known_altitude), ' m')
+        print('Calculated ASL altitude: ', ('%8.2f' % asl_altitude), ' m')
+        print('Sea level pressure: ', self.sea_level_pressure, ' hPa')
         expected_pressure = self.getExpectedPressureAtAltitude(known_altitude)
-        print("Expected ground level pressure at " + known_altitude " meters: " + expected_pressure + " hPa")
-        print("Measured ground level pressure: " + converted + " hPa")
+        print('Expected ground level pressure at ', known_altitude, ' meters: ', ('%8.2f' % expected_pressure), ' hPa')
+        print('Measured ground level pressure: ', ('%8.2f' % converted), ' hPa')
         
 
 
