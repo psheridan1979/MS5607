@@ -26,7 +26,7 @@ class MS5607:
     def __init__(self, bus_num = 1, address = 0x76):
         self.bus_num = bus_num
         self.address = address
-        self.bus = smbus.SMBUS(bus_num)
+        self.bus = smbus.SMBus(bus_num)
         self.resetSensor()
         self.coefficients = self.readCoefficients()
 
@@ -35,7 +35,7 @@ class MS5607:
         bytes = self.bus.read_i2c_block_data(self.address, register1, 2)
         return (bytes[0] << 8) + (bytes[1])
     def read24U(self, register):
-        bytes = self.bus.read_i2c_block_data(self.adress, register, 3)
+        bytes = self.bus.read_i2c_block_data(self.address, register, 3)
         return (bytes[0] << 16) + (bytes[1] << 8) + bytes[2]
     def hectoPascalToInHg(self, milliBar):
         return milliBar * 29.5333727 / 100000
@@ -48,7 +48,7 @@ class MS5607:
 
     # Commands		
     def resetSensor(self):
-        self.bus.write_byte(self.adress, self._CMD_RESET)
+        self.bus.write_byte(self.address, self._CMD_RESET)
         time.sleep(0.003) # wait for the reset sequence timing
     def readCoefficient(self, i):
         return self.read16U(self._CMD_PROM_RD + 2 * i, self._CMD_PROM_RD + 2 * i + 1)
@@ -59,7 +59,7 @@ class MS5607:
         return coefficients
     def readAdc(self, cmd):
         # set conversion mode
-        self.bus.write_byte(self.adress, self._CMD_ADC_CONV + cmd)
+        self.bus.write_byte(self.address, self._CMD_ADC_CONV + cmd)
         sleepTime = {self._CMD_ADC_256: 0.0009, self._CMD_ADC_512: 0.003, self._CMD_ADC_1024: 0.004, self._CMD_ADC_2048: 0.006, self._CMD_ADC_4096: 0.010}
         time.sleep(sleepTime[cmd & 0x0f])
         return self.read24U(self._CMD_ADC_READ)
