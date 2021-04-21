@@ -33,7 +33,7 @@ class MS5607:
         self.resetSensor()
         self.coefficients = self.readCoefficients()
         self.default_sea_level_pressure = 101410 #101325 #in HPa * 100, sea level is 1013.25 HPa
-        self.sea_level_pressure = default_sea_level_pressure
+        self.sea_level_pressure = self.default_sea_level_pressure
     # Some utility methods
     def read16U(self, register1, register2):
         bytes = self.bus.read_i2c_block_data(self.address, register1, 2)
@@ -49,6 +49,30 @@ class MS5607:
         return (1 - math.pow(currentMilliBar / baseMilliBar, .190284)) * 145366.45
     def getMetricAltitude(self, currentMilliBar, baseMilliBar):
         return 0.3048 * self.getImperialAltitude(currentMilliBar, baseMilliBar)
+    def calculateImperialAltitude(self, samples = 1):
+        temperature = []
+        pressure = []
+        temperature_sum = 0
+        pressure_sum = 0
+        for i in range(samples):
+            t = self.getDigitalTemperature()
+            temperature.append(t)
+            temperature_sum += t
+            p = self.getDigitalPressure()
+            pressure.append(p)
+            pressure_sum += p
+        meant_temp = temperature_sum / samples
+        mean_pressure = pressure_sum / samples 
+        temp_sigma = standardDeviation(temperature)
+        press_sigma = standardDeviation(pressure)
+        converted = self.convertPressureTemperature(mean_pressure, meant_temp)
+        altitude = getImperialAltitude(converted, self.sea_level_pressure)
+        return [altitude, temp_sigma, press_sigma]
+    def calculateMetricAltitude(self, samples = 1):
+        i = calculateImperialAltitude(samples)
+        m = i
+        m[0] = i[0] * 0.3048
+        return m
     def getExpectedPressureAtAltitude(self, altitude):
         return self.sea_level_pressure * math.exp(-0.00012 * altitude)
     def setGroundLevel(self, known_altitude, samples=500):
@@ -77,8 +101,10 @@ class MS5607:
         print('Measured ground level pressure: ', ('%8.2f' % converted), ' hPa')
         pressure_scaling_factor = expected_pressure / converted
         print('Pressure scaling factor: ', ('%6.5f' % pressure_scaling_factor)) 
-        adjusted_sea_level_pressure = self.sea_level_pressure * pressure_scaling_factor
+        adjusted_sea_level_pressure = self.sea_level_pressure / pressure_scaling_factor
         print('Adjusted sea level pressure: ', ('%8.2f' % adjusted_sea_level_pressure), ' hPa')
+        adjusted_altitude = self.getMetricAltitude(converted, adjusted_sea_level_pressure)
+        print('Adjusted ASL altitude: ', ('%8.2f' % adjusted_altitude), ' m')
 
     # Commands		
     def resetSensor(self):
