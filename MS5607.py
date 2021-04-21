@@ -32,8 +32,8 @@ class MS5607:
         self.bus = smbus.SMBus(bus_num)
         self.resetSensor()
         self.coefficients = self.readCoefficients()
-        self.sea_level_pressure = 101410 #101325 #in HPa * 100, sea level is 1013.25 HPa
-        self.ground_level_pressure = self.sea_level_pressure 
+        self.default_sea_level_pressure = 101410 #101325 #in HPa * 100, sea level is 1013.25 HPa
+        self.sea_level_pressure = default_sea_level_pressure
     # Some utility methods
     def read16U(self, register1, register2):
         bytes = self.bus.read_i2c_block_data(self.address, register1, 2)
@@ -75,9 +75,10 @@ class MS5607:
         expected_pressure = self.getExpectedPressureAtAltitude(known_altitude)
         print('Expected ground level pressure at ', known_altitude, ' meters: ', ('%8.2f' % expected_pressure), ' hPa')
         print('Measured ground level pressure: ', ('%8.2f' % converted), ' hPa')
-        
-
-
+        pressure_scaling_factor = expected_pressure / converted
+        print('Pressure scaling factor: ', ('%6.5f' % pressure_scaling_factor)) 
+        adjusted_sea_level_pressure = self.sea_level_pressure * pressure_scaling_factor
+        print('Adjusted sea level pressure: ', ('%8.2f' % adjusted_sea_level_pressure), ' hPa')
 
     # Commands		
     def resetSensor(self):
