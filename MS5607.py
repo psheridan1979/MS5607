@@ -69,12 +69,27 @@ class MS5607:
         return (2000 + dT * self.coefficients[5] / math.pow(2, 23)) / 100
         
     def convertPressureTemperature(self, pressure, temperature):
+        # if necessary, calculate 2nd order corrections
+        T2 = 0
+        off2 = 0
+        sens2 = 0
+        if  temperature < 20:
+            T2 = (dT*dT) / (2 << 30)
+            off2 = 61 * math.pow((temperature - 2000),2) / 16
+            sens2 = 2 * math.pow((temperature - 2000),2)
+            if temperature < -15:
+                off2 = off2 + 15 * math.pow((temperature + 1500), 2)
+                sens2 = sens2 + 8 * math.pow((temperature + 1500), 2)
+        #apply 2nd order corrections are necessary
+        temperature = temperature - T2
         # Calculate 1st order pressure and temperature
         dT = temperature - self.coefficients[4] * 256
         # Offset at actual temperature
         off = self.coefficients[1] * 4 + ((float(dT) / 2048) * (float(self.coefficients[3]) / 1024))
+        off = off - off2
         # Sensitivity at actual temperature
         sens = self.coefficients[0] * 2 + ((float(dT) / 4096) * (float(self.coefficients[2]) / 1024))
+        sens = sens - sens2
         # Temperature compensated pressure
         press = (float(pressure) / 2048) * (float(sens) / 1024) - off
         return press
