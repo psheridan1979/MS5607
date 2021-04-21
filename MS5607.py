@@ -32,7 +32,7 @@ class MS5607:
         self.bus = smbus.SMBus(bus_num)
         self.resetSensor()
         self.coefficients = self.readCoefficients()
-        self.sea_level_pressure = 101325 #in HPa * 100, sea level is 1013.25 HPa
+        self.sea_level_pressure = 101410 #101325 #in HPa * 100, sea level is 1013.25 HPa
         self.ground_level_pressure = self.sea_level_pressure 
     # Some utility methods
     def read16U(self, register1, register2):
@@ -50,24 +50,24 @@ class MS5607:
     def getMetricAltitude(self, currentMilliBar, baseMilliBar):
         return 0.3048 * self.getImperialAltitude(currentMilliBar, baseMilliBar)
     def getExpectedPressureAtAltitude(self, altitude):
-        return self.sea_level_pressure * exp(-0.00012 * altitude)
+        return self.sea_level_pressure * math.exp(-0.00012 * altitude)
     def setGroundLevel(self, known_altitude, samples=500):
         temperature = []
         pressure = []
         temperature_sum = 0
         pressure_sum = 0
         for i in range(samples):
-            t = sensor.getDigitalTemperature()
+            t = self.getDigitalTemperature()
             temperature.append(t)
             temperature_sum += t
-            p = sensor.getDigitalPressure()
+            p = self.getDigitalPressure()
             pressure.append(p)
             pressure_sum += p
         meant_temp = temperature_sum / samples
-        mean_pressure = presure_sum / samples 
+        mean_pressure = pressure_sum / samples 
         temp_sigma = standardDeviation(temperature)
         press_sigma = standardDeviation(pressure)
-        converted = sensor.convertPressureTemperature(mean_pressure, meant_temp)
+        converted = self.convertPressureTemperature(mean_pressure, meant_temp)
         asl_altitude = self.getMetricAltitude(converted, self.sea_level_pressure)
         print('Known ASL altitude: ', ('%8.2f' % known_altitude), ' m')
         print('Calculated ASL altitude: ', ('%8.2f' % asl_altitude), ' m')
