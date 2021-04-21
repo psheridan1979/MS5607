@@ -66,16 +66,19 @@ class MS5607:
         temp_sigma = standardDeviation(temperature)
         press_sigma = standardDeviation(pressure)
         converted = self.convertPressureTemperature(mean_pressure, meant_temp)
-        altitude = getImperialAltitude(converted, self.sea_level_pressure)
+        altitude = self.getImperialAltitude(converted, self.sea_level_pressure)
         return [altitude, temp_sigma, press_sigma]
     def calculateMetricAltitude(self, samples = 1):
-        i = calculateImperialAltitude(samples)
+        i = self.calculateImperialAltitude(samples)
         m = i
         m[0] = i[0] * 0.3048
         return m
     def getExpectedPressureAtAltitude(self, altitude):
         return self.sea_level_pressure * math.exp(-0.00012 * altitude)
     def setGroundLevel(self, known_altitude, samples=500):
+        print('Calculating adjustments from ', samples, ' samples.')
+        if samples > 200:
+            print('This could take up to ', ('%8.2f' % (samples/30)), ' seconds.')
         temperature = []
         pressure = []
         temperature_sum = 0
@@ -105,6 +108,7 @@ class MS5607:
         print('Adjusted sea level pressure: ', ('%8.2f' % adjusted_sea_level_pressure), ' hPa')
         adjusted_altitude = self.getMetricAltitude(converted, adjusted_sea_level_pressure)
         print('Adjusted ASL altitude: ', ('%8.2f' % adjusted_altitude), ' m')
+        self.sea_level_pressure = adjusted_sea_level_pressure
 
     # Commands		
     def resetSensor(self):
