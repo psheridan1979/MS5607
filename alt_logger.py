@@ -5,7 +5,7 @@ import time
 import csv
 from os import path
 
-file_path = '/home/pi/logs/altitude.csv'
+file_path = '/home/pi/src/weather_balloon/logs/altitude.csv'
 print(file_path)
 sensor = MS5607()
 samples = 10
